@@ -1,9 +1,16 @@
 from fastapi import FastAPI
-from typing import Optional
+from fastapi.middleware.cors import CORSMiddleware # IMPORTANTE
 
 app = FastAPI()
 
-# Datos extraídos de tu CSV para testear
+# Configuración de seguridad para que cualquier sitio pueda consultar tu API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 RIDER_DATABASE = {
     "827258": "Untrusted",
     "529582": "Trusted",
@@ -12,18 +19,14 @@ RIDER_DATABASE = {
     "1431677": "Trusted"
 }
 
-@app.get("/")
-def home():
-    return {"status": "API Funcionando"}
-
-# Este es el endpoint que conectará con tu código YAML
 @app.get("/exec")
-def get_rider_segment(riderId: str):
-    # Buscamos el rider en nuestra "base de datos"
-    segmento = RIDER_DATABASE.get(riderId, "Not Found")
+def get_rider_segment(riderId: str = None):
+    # Aseguramos que riderId sea un string y quitamos espacios
+    rid_clean = str(riderId).strip() if riderId else ""
     
-    # Retornamos el formato exacto que espera tu YAML: $infoRider.response.body.segment
+    segmento = RIDER_DATABASE.get(rid_clean, "Not Found")
+    
     return {
-        "riderId": riderId,
+        "riderId": rid_clean,
         "segment": segmento
     }
